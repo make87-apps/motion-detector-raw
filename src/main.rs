@@ -25,7 +25,7 @@ fn rgb888_to_gray(rgb_bytes: &[u8], width: i32, height: i32) -> opencv::Result<M
     let mat = Mat::from_slice(rgb_bytes)?;
     let mat = mat.reshape(3, height)?;
     let mut gray = Mat::default();
-    imgproc::cvt_color(&mat, &mut gray, imgproc::COLOR_RGB2GRAY, 0, core::AlgorithmHint::ALGO_HINT_DEFAULT)?;
+    imgproc::cvt_color(&mat, &mut gray, imgproc::COLOR_RGB2GRAY, 0)?;
     Ok(gray)
 }
 
@@ -40,7 +40,7 @@ fn rgba8888_to_gray(rgba_bytes: &[u8], width: i32, height: i32) -> opencv::Resul
     let mat = Mat::from_slice(rgba_bytes)?;
     let mat = mat.reshape(4, height)?;
     let mut gray = Mat::default();
-    imgproc::cvt_color(&mat, &mut gray, imgproc::COLOR_RGBA2GRAY, 0, core::AlgorithmHint::ALGO_HINT_DEFAULT)?;
+    imgproc::cvt_color(&mat, &mut gray, imgproc::COLOR_RGBA2GRAY, 0)?;
     Ok(gray)
 }
 

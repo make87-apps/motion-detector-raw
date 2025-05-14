@@ -1,5 +1,5 @@
 build_kit:
-  name: rust
+  name: file://build_kit/Dockerfile
   version: latest
 inbound_topics:
   - name: IMAGE_RAW
