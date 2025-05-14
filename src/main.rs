@@ -71,6 +71,7 @@ fn main() -> opencv::Result<()> {
 
     let down_width = make87::get_config_value("PROCESSING_RESCALE_WIDTH")
         .as_ref()
+        .filter(|s| !s.trim().is_empty())
         .map_or_else(
             || 960,
             |s| s.parse::<i32>().unwrap_or_else(|e| {
@@ -82,18 +83,21 @@ fn main() -> opencv::Result<()> {
     // MOG2 config with defaults
     let mog2_history = make87::get_config_value("MOG2_HISTORY")
         .as_ref()
+        .filter(|s| !s.trim().is_empty())
         .map_or(500, |s| s.parse::<i32>().unwrap_or_else(|e| {
             eprintln!("Failed to parse MOG2_HISTORY ('{}'): {}", s, e);
             std::process::exit(1);
         }));
     let mog2_var_threshold = make87::get_config_value("MOG2_VAR_THRESHOLD")
         .as_ref()
+        .filter(|s| !s.trim().is_empty())
         .map_or(16.0, |s| s.parse::<f64>().unwrap_or_else(|e| {
             eprintln!("Failed to parse MOG2_VAR_THRESHOLD ('{}'): {}", s, e);
             std::process::exit(1);
         }));
     let mog2_detect_shadows = make87::get_config_value("MOG2_DETECT_SHADOWS")
         .as_ref()
+        .filter(|s| !s.trim().is_empty())
         .map_or(true, |s| match s.to_ascii_lowercase().as_str() {
             "0" | "false" => false,
             _ => true,
