@@ -4,7 +4,7 @@ build_kit:
 inbound_topics:
   - name: IMAGE_RAW
     message_type: make87_messages.image.uncompressed.ImageRawAny
-outbound _topics:
+outbound_topics:
     - name: MOTION_IMAGE_RAW
       message_type: make87_messages.image.uncompressed.ImageRawAny
 config:
