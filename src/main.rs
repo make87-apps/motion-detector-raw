@@ -60,10 +60,20 @@ fn downsample(mat: &Mat, target_width: i32, target_height: i32) -> opencv::Resul
 fn detect_motion_mog2(
     background_subtractor: &mut core::Ptr<video::BackgroundSubtractorMOG2>,
     frame: &Mat,
+    motion_pixel_threshold: i32,
 ) -> opencv::Result<bool> {
     let mut fg_mask = Mat::default();
     BackgroundSubtractorMOG2Trait::apply(background_subtractor, frame, &mut fg_mask, -1.0)?;
-    Ok(core::count_non_zero(&fg_mask)? > 500)
+
+    // Create a mask where only pixels == 255 (not shadow, not background)
+    let mut motion_mask = Mat::default();
+    core::compare(
+        &fg_mask,
+        &core::Scalar::from(255.0),
+        &mut motion_mask,
+        core::CmpTypes::CMP_EQ as i32,
+    )?;
+    Ok(core::count_non_zero(&motion_mask)? > motion_pixel_threshold)
 }
 
 fn main() -> opencv::Result<()> {
@@ -99,9 +109,16 @@ fn main() -> opencv::Result<()> {
         .as_ref()
         .filter(|s| !s.trim().is_empty())
         .map_or(true, |s| match s.to_ascii_lowercase().as_str() {
-            "0" | "false" => false,
-            _ => true,
+            "1" | "true" => true,
+            _ => false,
         });
+    let motion_pixel_threshold = make87::get_config_value("MOTION_PIXEL_THRESHOLD")
+        .as_ref()
+        .filter(|s| !s.trim().is_empty())
+        .map_or(800, |s| s.parse::<i32>().unwrap_or_else(|e| {
+            eprintln!("Failed to parse MOTION_PIXEL_THRESHOLD ('{}'): {}", s, e);
+            std::process::exit(1);
+        }));
 
     let mog2 = Arc::new(Mutex::new(
         video::create_background_subtractor_mog2(mog2_history, mog2_var_threshold, mog2_detect_shadows)?
@@ -161,7 +178,7 @@ fn main() -> opencv::Result<()> {
             };
 
             let mut mog2 = mog2.lock().unwrap();
-            if matches!(detect_motion_mog2(&mut *mog2, &curr_down), Ok(true)) {
+            if matches!(detect_motion_mog2(&mut *mog2, &curr_down, motion_pixel_threshold), Ok(true)) {
                 println!("Motion detected by background subtraction!");
                 if let Err(e) = publisher.publish(&message) {
                     eprintln!("Failed to publish MOTION_IMAGE_RAW: {:?}", e);
@@ -173,3 +190,4 @@ fn main() -> opencv::Result<()> {
     make87::keep_running();
     Ok(())
 }
+

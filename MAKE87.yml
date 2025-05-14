@@ -24,4 +24,8 @@ config:
     - name: MOG2_DETECT_SHADOWS
       description: "Enable shadow detection for MOG2 background subtractor (true/false)"
       required: false
-      default: "true"
+      default: "false"
+    - name: MOTION_PIXEL_THRESHOLD
+      description: "Minimum number of changed pixels in the mask to trigger motion detection"
+      required: false
+      default: "800"
