@@ -1,6 +1,27 @@
 build_kit:
   name: rust
   version: latest
-outbound_topics:
-  - name: OUTGOING_MESSAGE
-    message_type: make87_messages.text.text_plain.PlainText
+inbound_topics:
+  - name: IMAGE_RAW
+    message_type: make87_messages.image.uncompressed.ImageRawAny
+outbound _topics:
+    - name: MOTION_IMAGE_RAW
+      message_type: make87_messages.image.uncompressed.ImageRawAny
+config:
+  values:
+    - name: PROCESSING_RESCALE_WIDTH
+      description: "Width to rescale the image to"
+      required: false
+      default: "960"
+    - name: MOG2_HISTORY
+      description: "History parameter for MOG2 background subtractor"
+      required: false
+      default: "500"
+    - name: MOG2_VAR_THRESHOLD
+      description: "Variance threshold for MOG2 background subtractor"
+      required: false
+      default: "16.0"
+    - name: MOG2_DETECT_SHADOWS
+      description: "Enable shadow detection for MOG2 background subtractor (true/false)"
+      required: false
+      default: "true"

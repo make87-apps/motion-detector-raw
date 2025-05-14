@@ -1,8 +1,9 @@
 [package]
-name = "publisher_template"
+name = "motion-detector-raw"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 make87 = "*"
 make87_messages = "*"
+opencv = { version="0.94.4", features = ["clang-runtime"] }
