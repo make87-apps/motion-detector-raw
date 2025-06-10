@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
 use make87_messages::image::uncompressed::ImageRawAny;
 use opencv::{core, imgproc, prelude::*, video};
+use log::{error, info}; // Added for logging
 
 fn yuv_to_gray(yuv_bytes: &[u8], width: i32, height: i32) -> opencv::Result<Mat> {
     let y_plane_size = (width * height) as usize;
@@ -77,6 +78,7 @@ fn detect_motion_mog2(
 }
 
 fn main() -> opencv::Result<()> {
+    env_logger::init(); // Initialize env_logger
     make87::initialize();
 
     let down_width = make87::get_config_value("PROCESSING_RESCALE_WIDTH")
@@ -85,7 +87,7 @@ fn main() -> opencv::Result<()> {
         .map_or_else(
             || 960,
             |s| s.parse::<i32>().unwrap_or_else(|e| {
-                eprintln!("Failed to parse PROCESSING_RESCALE_WIDTH ('{}'): {}", s, e);
+                error!("Failed to parse PROCESSING_RESCALE_WIDTH ('{}'): {}", s, e);
                 std::process::exit(1);
             }),
         );
@@ -95,14 +97,14 @@ fn main() -> opencv::Result<()> {
         .as_ref()
         .filter(|s| !s.trim().is_empty())
         .map_or(500, |s| s.parse::<i32>().unwrap_or_else(|e| {
-            eprintln!("Failed to parse MOG2_HISTORY ('{}'): {}", s, e);
+            error!("Failed to parse MOG2_HISTORY ('{}'): {}", s, e);
             std::process::exit(1);
         }));
     let mog2_var_threshold = make87::get_config_value("MOG2_VAR_THRESHOLD")
         .as_ref()
         .filter(|s| !s.trim().is_empty())
         .map_or(16.0, |s| s.parse::<f64>().unwrap_or_else(|e| {
-            eprintln!("Failed to parse MOG2_VAR_THRESHOLD ('{}'): {}", s, e);
+            error!("Failed to parse MOG2_VAR_THRESHOLD ('{}'): {}", s, e);
             std::process::exit(1);
         }));
     let mog2_detect_shadows = make87::get_config_value("MOG2_DETECT_SHADOWS")
@@ -116,7 +118,7 @@ fn main() -> opencv::Result<()> {
         .as_ref()
         .filter(|s| !s.trim().is_empty())
         .map_or(800, |s| s.parse::<i32>().unwrap_or_else(|e| {
-            eprintln!("Failed to parse MOTION_PIXEL_THRESHOLD ('{}'): {}", s, e);
+            error!("Failed to parse MOTION_PIXEL_THRESHOLD ('{}'): {}", s, e);
             std::process::exit(1);
         }));
 
@@ -163,7 +165,7 @@ fn main() -> opencv::Result<()> {
                 }
                 _ => Err("Unsupported or missing image format in ImageRawAny".to_string()),
             }.unwrap_or_else(|e| {
-                eprintln!("{}", e);
+                error!("{}", e);
                 return (Default::default(), 0, 0);
             });
 
@@ -172,16 +174,16 @@ fn main() -> opencv::Result<()> {
             let curr_down = match downsample(&curr_gray, down_width, down_height) {
                 Ok(mat) => mat,
                 Err(e) => {
-                    eprintln!("Failed to downsample: {:?}", e);
+                    error!("Failed to downsample: {:?}", e);
                     return;
                 }
             };
 
             let mut mog2 = mog2.lock().unwrap();
             if matches!(detect_motion_mog2(&mut *mog2, &curr_down, motion_pixel_threshold), Ok(true)) {
-                println!("Motion detected by background subtraction!");
+                info!("Motion detected by background subtraction!");
                 if let Err(e) = publisher.publish(&message) {
-                    eprintln!("Failed to publish MOTION_IMAGE_RAW: {:?}", e);
+                    error!("Failed to publish MOTION_IMAGE_RAW: {:?}", e);
                 }
             }
         }).expect("Failed to subscribe to IMAGE_RAW");
@@ -190,4 +192,3 @@ fn main() -> opencv::Result<()> {
     make87::keep_running();
     Ok(())
 }
-
