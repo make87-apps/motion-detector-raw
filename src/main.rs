@@ -78,7 +78,6 @@ fn detect_motion_mog2(
 }
 
 fn main() -> opencv::Result<()> {
-    env_logger::init(); // Initialize env_logger
     make87::initialize();
 
     let down_width = make87::get_config_value("PROCESSING_RESCALE_WIDTH")
