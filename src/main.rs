@@ -45,6 +45,19 @@ fn rgba8888_to_gray(rgba_bytes: &[u8], width: i32, height: i32) -> opencv::Resul
     Ok(gray)
 }
 
+fn nv12_to_gray(nv12_bytes: &[u8], width: i32, height: i32) -> opencv::Result<Mat> {
+    // NV12: Y plane first (width*height), then interleaved UV (ignored for grayscale)
+    let y_plane_size = (width * height) as usize;
+    if nv12_bytes.len() < y_plane_size {
+        return Err(opencv::Error::new(
+            core::StsUnmatchedSizes,
+            format!("Invalid NV12 buffer size: got {}, expected at least {}", nv12_bytes.len(), y_plane_size),
+        ));
+    }
+    let y_data = &nv12_bytes[..y_plane_size];
+    Mat::from_slice(y_data)?.reshape(1, height).map(|mat| mat.clone_pointee())
+}
+
 fn downsample(mat: &Mat, target_width: i32, target_height: i32) -> opencv::Result<Mat> {
     let mut resized = Mat::default();
     imgproc::resize(
@@ -161,6 +174,11 @@ fn main() -> opencv::Result<()> {
                     rgba8888_to_gray(&rgba.data, rgba.width as i32, rgba.height as i32)
                         .map(|mat| (mat, rgba.width as i32, rgba.height as i32))
                         .map_err(|e| format!("RGBA8888 error: {:?}", e))
+                }
+                Some(make87_messages::image::uncompressed::image_raw_any::Image::Nv12(nv12)) => {
+                    nv12_to_gray(&nv12.data, nv12.width as i32, nv12.height as i32)
+                        .map(|mat| (mat, nv12.width as i32, nv12.height as i32))
+                        .map_err(|e| format!("NV12 error: {:?}", e))
                 }
                 _ => Err("Unsupported or missing image format in ImageRawAny".to_string()),
             }.unwrap_or_else(|e| {

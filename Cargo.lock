@@ -1286,9 +1286,9 @@ dependencies = [
 
 [[package]]
 name = "make87_messages"
-version = "0.2.6"
+version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1d116e444dc9aaab3e08b9551fea3706ab0492edf35d9121bfcf46f509a6d55"
+checksum = "b83274f31b34e20c6bb4b3f2aea1c25e5fc0a7f6456156e00c6c488b0979d460"
 dependencies = [
  "prost",
  "prost-build",
